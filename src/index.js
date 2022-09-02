@@ -1,81 +1,56 @@
-let cardinfo;
-function cardRender(card){
-    // console.log(card)
-    cardinfo = card
-    cardTitleTag = document.querySelector('#card-title'),
-    cardImageTag = document.querySelector('#card-image'),
-    cardLikesTag = document.querySelector('#like-count'),
-    cardLikesBtnTag = document.querySelector('#like-button'),
-    cardListTag = document.querySelector('#comments-list'),
-    cardCommentFormTag = document.querySelector('#comment-form'),
-    cardCommentInputTag = document.querySelector('#comment'),
+const flatagramAPI = 'http://localhost:3000/images/1'
+const cardImage =el('card-image')
+const cardTitle =el('card-title')
+const likeCount =el('like-count')
+const commentList =el('comments-list')
+let likes;
 
-    cardTitleTag.textContent = card.title;
-    cardImageTag.src = card.image;
-    cardLikesTag.textContent = `${card.likes} likes`;
+el('like-button').addEventListener('click', () => {
 
-    while(cardListTag.hasChildNodes()){
-        cardListTag.removeChild(cardListTag.lastChild)
-    }
+    likes += 1;
+    renderLikes();
+})
 
-    card.comments.forEach(comment => {
-        let commentTag = document.createElement('li');
-        commentTag.textContent = comment.content;
-        cardListTag.appendChild(commentTag)
-    });
+el('comment-form').addEventListener('submit', addComment);
 
-    cardLikesBtnTag.addEventListener('click', (env) => {
-        card.likes += 1;
-        cardLikesTag.textContent = `${card.likes} Likes`
+fetch(flatagramAPI)
+ .then(res => res.json())
+ .then(renderGram);
 
-    })
+function renderGram(data){
+    likes = data.likes;
 
-    cardCommentFormTag.addEventListener('submit', (env) => {
-        const commentInput = document.querySelector('#comment')
-        env.preventDefault();
-        let commentTag = document.createElement('li');
-        commentTag.textContent = cardCommentInputTag.value;
-        cardListTag.appendChild(commentTag);
+    cardImage.src = data.image;
+    cardTitle.textContent = data.title
+    renderLikes();
 
-        const newComment = {
-            id: card.comments.length+1,
-            imageId: 1,
-            content: cardCommentInputTag.value
-        }
-        card.comments.push(newComment);
+renderComments(data.comments);
 
-        fetch('http://localhost:3000/images/1', {
-            method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(card)
-        })
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(err => console.log(`Error: ${err}`));
 
-        fetch('http://localhost:3000/comments/', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(newComment)
-        })
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(err => console.log(`Error: ${err}`));
 
-        cardCommentFormTag.reset();
-    });
+}
+function renderLikes(){
+    document.getElementById('like-count').textContent=`${likes} likes`;
+}
 
-};
+function renderComments(comments){
+commentList.innerHTML='';
+comments.forEach(renderComments)
+}
 
-function fetchData(path=1){
-    url = `http://localhost:3000/images/${path}`;
-    fetch(url)
-    .then(response => response.json())
-    .then(data => cardRender(data))
-    .catch(err => console.log(`Error: ${err}`));
-};
+function renderComment(comment){
+    const li =document.createElement('li');
+    li.textContent =comment.content;
+    commentList. append(li);
+}
 
-function init(){
-    fetchData();  
-};
-init()
+function addComment(event){
+event.preventDefault();
+const commentText = event.target.comment.value;
+event.target.reset();
+renderComment({content:commentText});
+}
+
+function el(id){
+    return document.getElementById(id);
+}
