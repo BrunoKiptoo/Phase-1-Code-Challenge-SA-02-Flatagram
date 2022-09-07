@@ -1,4 +1,4 @@
-const flatagramAPI = 'http://localhost:3000';
+const flatagramAPI = "http://localhost:3000";
 const cardImage =el('card-image')
 const cardTitle =el('card-title')
 const likeCount =el('like-count')
